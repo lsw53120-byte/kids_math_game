@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6b8b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>냠냠 팡팡! 수학 놀이터</title>
+  <link rel="stylesheet" href="style.css?v=20260929-layout">
+</head>
+<body>
+  <div id="app-container">
+    <!-- PWA 원클릭 앱 설치 배너 -->
+    <div id="pwa-install-banner" class="install-banner" style="display: none;">
+      <div class="install-banner-text">
+        <span>📲</span> 폰에 앱으로 설치하고 바로 실행하기!
+      </div>
+      <button id="pwa-install-btn" class="install-action-btn">설치</button>
+      <button id="pwa-close-btn" class="install-close-btn">✕</button>
+    </div>
+
+    <!-- 컨페티 효과 캔버스 -->
+    <canvas id="confetti-canvas" class="confetti-layer"></canvas>
+
+    <!-- 상단 네비게이션 & 상태 바 -->
+    <header class="top-nav">
+      <button id="home-btn" class="nav-btn" title="처음으로">🏠</button>
+      <div class="top-stats">
+        <div class="stat-badge star">⭐ <span id="star-count-display">0</span></div>
+        <div class="stat-badge">🎁 <span id="sticker-count-display">0</span></div>
+      </div>
+      <button id="sound-toggle-btn" class="nav-btn" title="소리 켜기/끄기">🔊</button>
+    </header>
+
+    <!-- 1. 메인 홈 화면 -->
+    <main id="home-screen" class="screen home-screen active">
+      <div class="main-title-box">
+        <span class="logo-badge">놀면서 배우는 재미있는 수학!</span>
+        <h1 class="main-title">냠냠 팡팡!<br>수학 놀이터</h1>
+      </div>
+
+      <div class="mascot-area">
+        <div class="mascot-char" id="main-mascot">🐻</div>
+      </div>
+
+      <!-- 테마 선택 바 (동물 / 공룡 / 우주 / 자동차) -->
+      <div class="theme-selector-box">
+        <div class="theme-title">🎨 신나는 테마를 골라보세요!</div>
+        <div class="theme-tabs">
+          <button class="theme-btn active" data-theme="animals">
+            <span class="theme-icon">🐻</span>
+            <span>동물</span>
+          </button>
+          <button class="theme-btn" data-theme="dino">
+            <span class="theme-icon">🦖</span>
+            <span>공룡</span>
+          </button>
+          <button class="theme-btn" data-theme="space">
+            <span class="theme-icon">🚀</span>
+            <span>우주</span>
+          </button>
+          <button class="theme-btn" data-theme="car">
+            <span class="theme-icon">🏎️</span>
+            <span>자동차</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 난이도 선택 바 (1단계: 1~5부터 4단계: 16~20까지) -->
+      <div class="difficulty-selector">
+        <div class="diff-title">🎯 도전할 난이도를 골라보세요!</div>
+        <div class="diff-tabs four-cols">
+          <button class="diff-btn active" data-level="1">1단계<br>(1~5)</button>
+          <button class="diff-btn" data-level="2">2단계<br>(6~10)</button>
+          <button class="diff-btn" data-level="3">3단계<br>(11~15)</button>
+          <button class="diff-btn" data-level="4">4단계<br>(16~20)</button>
+        </div>
+        <p id="home-mission-guide" class="mission-note">그림을 세고 한 번에 맞히기 · 더하기 3개, 빼기 2개를 완료하면 선물 🎁</p>
+      </div>
+
+      <!-- 게임 모드 선택 메뉴 -->
+      <div class="menu-list">
+        <button type="button" class="game-card-btn add-mode" id="btn-mode-add">
+          <div class="btn-icon">🍎</div>
+          <div class="btn-info">
+            <h3>모아 보기 · 더하기</h3>
+            <p>두 무리를 모아 함께 세어봐요!</p>
+          </div>
+        </button>
+
+        <button type="button" class="game-card-btn sub-mode" id="btn-mode-sub">
+          <div class="btn-icon">🎈</div>
+          <div class="btn-info">
+            <h3>남은 것 세기 · 빼기</h3>
+            <p>몇 개를 빼고 남은 것을 세어봐요!</p>
+          </div>
+        </button>
+
+        <button type="button" class="game-card-btn quiz-mode" id="btn-mode-quiz">
+          <div class="btn-icon">⭐</div>
+          <div class="btn-info">
+            <h3>섞어 풀기 · 연습</h3>
+            <p>더하기와 빼기를 섞어 연습해요. 미션 별은 모아 보기와 남은 것 세기에서 받아요!</p>
+          </div>
+        </button>
+
+        <button type="button" class="game-card-btn sticker-mode" id="btn-mode-stickers">
+          <div class="btn-icon">📖</div>
+          <div class="btn-info">
+            <h3>내 보물 스티커북</h3>
+            <p>내가 모은 칭찬 스티커 보러가기</p>
+          </div>
+        </button>
+
+        <!-- Google Play & Apple App Store 스타일 원클릭 앱 설치 센터 -->
+        <div class="store-install-card">
+          <div class="store-badge-header">
+            <span>✨</span> 보호자 안내 · 홈 화면에 추가하기
+          </div>
+          <div class="store-button-group">
+            <button id="btn-install-android" class="store-install-btn google-play">
+              <span class="store-icon">▶️</span>
+              <div class="store-btn-text">
+                <small>안드로이드</small>
+                <strong>홈 화면에 추가</strong>
+              </div>
+            </button>
+            <button id="btn-install-ios" class="store-install-btn app-store">
+              <span class="store-icon">🍏</span>
+              <div class="store-btn-text">
+                <small>아이폰/아이패드</small>
+                <strong>홈 화면에 추가</strong>
+              </div>
+            </button>
+          </div>
+          <div class="store-install-caption">
+            💡 브라우저에서 홈 화면에 추가하면 오프라인에서도 사용할 수 있어요.
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 2. 게임 플레이 화면 (공통) -->
+    <section id="game-play-screen" class="screen">
+      <!-- 레벨 목표 및 진행도 게이지 바 -->
+      <div id="level-goal-container" class="level-goal-bar">
+        <div class="level-goal-info">
+          <span class="level-badge" id="current-level-badge">1단계 (1~5)</span>
+          <span class="goal-text" id="goal-remaining-text">더하기 0/3 · 빼기 0/2</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="goal-progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- 다시 세기 안내 -->
+      <div id="penalty-toast" class="penalty-toast" role="status">괜찮아! 다시 세어보자 😊</div>
+
+      <!-- 안내 문구 및 음성 다시듣기 -->
+      <div class="game-header-box">
+        <div id="prompt-text" class="prompt-text">문제를 준비하고 있어요...</div>
+        <button id="replay-voice-btn" class="voice-replay-btn">
+          <span>🔊</span> 다시 들려줘!
+        </button>
+      </div>
+
+      <!-- 수식 표시 바 -->
+      <div class="equation-bar">
+        <span id="eq-num1" class="num-pill">0</span>
+        <span id="eq-operator">+</span>
+        <span id="eq-num2" class="num-pill">0</span>
+        <span>=</span>
+        <span id="eq-ans" class="num-pill unknown">?</span>
+      </div>
+
+      <!-- 인터랙티브 놀이 무대 -->
+      <div class="stage-area" id="game-stage">
+        <!-- 자바스크립트가 동적으로 채움 -->
+      </div>
+
+      <p id="answer-hint" class="answer-hint" role="status">하나씩 세어보세요.</p>
+
+      <!-- 보기 버튼 키패드 -->
+      <div class="choices-area" id="choices-area">
+        <!-- 보기 버튼이 생성됨 -->
+      </div>
+    </section>
+
+    <!-- 3. 스티커북 화면 -->
+    <section id="sticker-book-screen" class="screen sticker-book-screen">
+      <div class="game-header-box">
+        <h2 style="font-size:24px; color:#d9480f;">🎨 내 보물 스티커북</h2>
+        <p style="font-size:14px; color:#868e96; margin-top:4px;">단계 미션을 마치고 받은 선물이에요!</p>
+      </div>
+
+      <div class="sticker-board" id="sticker-board">
+        <!-- 수집한 스티커들이 렌더링됨 -->
+      </div>
+    </section>
+
+    <!-- 정답 축하 보상 팝업 모달 -->
+    <div id="reward-modal-overlay" class="modal-overlay">
+      <div class="reward-modal">
+        <div id="modal-reward-icon" class="reward-icon">⭐</div>
+        <h2 id="modal-reward-title" class="reward-title">참 잘했어요!</h2>
+        <p id="modal-reward-desc" class="reward-desc">미션 별을 모아보세요!</p>
+        <button id="modal-next-btn" class="modal-next-btn">다음 문제 ➡️</button>
+      </div>
+    </div>
+
+    <!-- 4. 레벨업 대축제 모달 (목표 별 달성 시 등장) -->
+    <div id="levelup-modal-overlay" class="modal-overlay">
+      <div class="reward-modal levelup-modal">
+        <div class="levelup-badge">LEVEL UP! 🚀</div>
+        <div class="reward-icon bounce-chest" id="modal-levelup-icon">🎁</div>
+        <h2 class="reward-title" id="modal-levelup-title">레벨업 대축제!</h2>
+        <p class="reward-desc" id="modal-levelup-desc">축하해요! 다음 단계로 승급했어요!</p>
+        <div class="levelup-reward-box" id="levelup-bonus-box">
+          <span style="font-size:13px; color:#e8590c; font-weight:bold;">🎉 미션 완료 선물!</span>
+          <div id="levelup-bonus-item" style="font-size:36px; margin-top:4px;">👑</div>
+        </div>
+        <button id="modal-levelup-btn" class="modal-next-btn levelup-btn">다음 단계로 모험 떠나기! 🌟</button>
+      </div>
+    </div>
+
+    <!-- 5. 아이폰(iOS) App Store 스타일 설치 안내 모달 -->
+    <div id="ios-install-modal-overlay" class="modal-overlay">
+      <div class="reward-modal ios-guide-modal">
+        <div class="ios-guide-header">
+          <span style="font-size:36px;">🍏</span>
+          <h2 style="font-size:20px; color:#1c7ed6; margin-top:6px;">아이폰/아이패드 홈 화면에 앱 설치</h2>
+        </div>
+        <div class="ios-steps-box">
+          <div class="ios-step-item">
+            <span class="step-num">1</span>
+            <span>사파리(Safari) 화면 아래의 <strong>공유 버튼 [⎋ 또는 ⬆]</strong>을 탭하세요.</span>
+          </div>
+          <div class="ios-step-item">
+            <span class="step-num">2</span>
+            <span>메뉴를 아래로 스크롤하여 <strong>[홈 화면에 추가 ➕]</strong>를 누르세요.</span>
+          </div>
+          <div class="ios-step-item">
+            <span class="step-num">3</span>
+            <span>우측 상단 <strong>[추가]</strong>를 누르면 진짜 앱으로 설치 완료!</span>
+          </div>
+        </div>
+        <button id="modal-ios-close-btn" class="modal-next-btn" style="background:#1c7ed6; margin-top:14px;">확인했어요! 👍</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio.js?v=20260929-layout"></script>
+  <script src="game.js?v=20260929-layout"></script>
+  <script>
+    // 서비스 워커 등록 (오프라인 실행 및 자동 업데이트 지원)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('SW 등록 성공:', reg.scope);
+            reg.update();
+          })
+          .catch((err) => console.log('SW 등록 실패:', err));
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+
+    // 안드로이드 & iOS 스토어 스타일 원클릭 앱 설치 연동
+    let deferredPrompt = null;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const closeBtn = document.getElementById('pwa-close-btn');
+
+    const androidBtn = document.getElementById('btn-install-android');
+    const iosBtn = document.getElementById('btn-install-ios');
+    const iosModal = document.getElementById('ios-install-modal-overlay');
+    const iosCloseBtn = document.getElementById('modal-ios-close-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBanner) installBanner.style.display = 'flex';
+      if (androidBtn) {
+        androidBtn.classList.add('ready');
+      }
+    });
+
+    // 안드로이드 (Google Play 스타일 원클릭 앱 설치)
+    if (androidBtn) {
+      androidBtn.addEventListener('click', async () => {
+        window.sound.playClick();
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('User install choice:', outcome);
+          deferredPrompt = null;
+        } else {
+          // 이미 앱으로 설치되었거나 브라우저 메뉴 지원 안내
+          alert('💡 브라우저 메뉴(점 3개)에서 [앱 설치] 또는 [홈 화면에 추가]를 누르시면 스마트폰 바탕화면에 즉시 설치됩니다!');
+        }
+      });
+    }
+
+    // iOS (App Store 스타일 홈 화면 추가)
+    if (iosBtn) {
+      iosBtn.addEventListener('click', () => {
+        window.sound.playClick();
+        if (iosModal) iosModal.classList.add('active');
+      });
+    }
+
+    if (iosCloseBtn && iosModal) {
+      iosCloseBtn.addEventListener('click', () => {
+        iosModal.classList.remove('active');
+      });
+    }
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        installBanner.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('User install choice:', outcome);
+        deferredPrompt = null;
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        installBanner.style.display = 'none';
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (installBanner) installBanner.style.display = 'none';
+      alert('🎉 냠냠 팡팡 수학 놀이터 앱이 성공적으로 설치되었습니다!');
+    });
+  </script>
+</body>
+</html>
